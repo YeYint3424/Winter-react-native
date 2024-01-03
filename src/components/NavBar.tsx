@@ -15,6 +15,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 22,
     paddingVertical: 0,
+    backgroundColor: '#006379'
   },
   logo: {
     fontFamily: 'Pacifico-Regular',
