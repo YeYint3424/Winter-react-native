@@ -8,43 +8,47 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Button, Input} from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import {supabase} from '../api/supabase';
 import {RootStackScreenProps} from '../routes/type';
+import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
+
 type Props = RootStackScreenProps<'SignUp'>;
-const SignUp = ({navigation}: Props) => {
+type Navigation = Props['navigation'];
+
+const SignUp = () => {
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [rePassword, setRePassword] = useState<string>();
-  const [loading, setLoading] = useState<boolean>();
+  const [rePassword, setRePassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
-  async function signUpWithEmail() {
-    setLoading(true);
-    const {
-      data: {session},
-      error,
-    } = await supabase.auth.signUp({
-      name: name,
-      email: email,
-      password: password,
-    });
+  const navigation = useNavigation<Navigation>()
 
-    const {data} = await supabase
-      .from('user')
-      .insert([{name: name, email: email, password: password}])
-      .select();
-
-    if (error) Alert.alert(error.message);
-    if (!session) {
-      Alert.alert('Please check your inbox for email verification!');
-      navigation.navigate('Login');
+  const fetchData = async () => {
+    try {
+      const ipAddress = '192.168.199.32';
+      const port = '9999';
+      const response = await axios.post(
+        `http://${ipAddress}:${port}/api/v1/user/create`,{
+          name : name,
+          email : email,
+          password : password
+        }
+      );
+      console.log('created successfully:');
+      navigation.navigate('Login')
+    } catch (error:any) {
+      console.log('Error:', error.message);
     }
-    setLoading(false);
-  }
+  };
 
+  const onSubmit = () => {
+    fetchData();
+  };
+  // 10.1.30.81
   return (
     <ImageBackground
       source={require('../assets/imgs/bg.jpg')}
@@ -104,7 +108,7 @@ const SignUp = ({navigation}: Props) => {
             <TouchableOpacity
               disabled={loading}
               style={styles.button}
-              onPress={() => signUpWithEmail()}>
+              onPress={onSubmit}>
               <Text style={styles.buttonText}>Create an Account</Text>
             </TouchableOpacity>
           </View>

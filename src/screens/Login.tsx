@@ -12,36 +12,43 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {FC, useState} from 'react';
+import React, {FC, useEffect, useState} from 'react';
 import {Button, Image, Input} from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {supabase} from '../api/supabase';
 import {RootStackScreenProps} from '../routes/type';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
-type RenderItem = {
-  items: {email: string; password: string};
-};
+
 type Props = RootStackScreenProps<'Login'>;
 type Navigation = Props['navigation'];
 
-const Login = ({navigation}: Props) => {
+const Login = () => {
+
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>();
-
-  async function signInWithEmail() {
-    setLoading(true);
-    const {error} = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-
-    if (error) Alert.alert(error.message);
-    setLoading(false);
-  }
+  const navigation = useNavigation<Navigation>()
 
   const handleToSignUp = () => {
     navigation.navigate('SignUp');
+  };
+
+  const handleToSignIn = async () => {
+    try {
+      const response = await axios.post('http://192.168.199.32:9999/api/v1/user/find', {
+        email: email,
+        password: password,
+      });
+  
+      console.log('Response data:', response.data);
+      await AsyncStorage.setItem('userData', JSON.stringify(response.data));
+      navigation.navigate('Home');
+    }catch (err) {
+      console.log(err)
+    }
   };
 
   return (
@@ -87,9 +94,7 @@ const Login = ({navigation}: Props) => {
               keyboardType="default"
             />
             <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => signInWithEmail()}>
+              <TouchableOpacity style={styles.button} onPress={handleToSignIn}>
                 <Text style={styles.buttonText}>Login</Text>
               </TouchableOpacity>
             </View>
@@ -161,7 +166,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textDecorationLine: 'underline',
     textShadowColor: 'white',
-    textShadowOffset: { width: 1, height: 1 }, 
+    textShadowOffset: {width: 1, height: 1},
     textShadowRadius: 5,
   },
   newAccountContainer: {
